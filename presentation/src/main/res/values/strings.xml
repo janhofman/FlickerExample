@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Flicker</string>
+    <string name="error">"Oops! "</string>
+    <string name="empty">Nothing to be had here!</string>
+    <string name="share_image">Share Image Link</string>
+    <string name="downloading">Downloading image…</string>
+    <string name="download_success">Image downloaded</string>
+    <string name="download_error">Could not download image</string>
+    <string name="search_hint">Search by tags…</string>
+</resources>

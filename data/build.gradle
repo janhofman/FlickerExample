@@ -1,0 +1,42 @@
+plugins {
+    id 'com.android.library'
+    id 'org.jetbrains.kotlin.android'
+    id 'kotlin-kapt'
+
+}
+
+android {
+    namespace 'hofy.data'
+    compileSdk application.targetSdk
+
+    defaultConfig {
+        minSdkVersion application.minSdk
+        targetSdkVersion application.targetSdk
+
+        consumerProguardFiles "consumer-rules.pro"
+        buildConfigField "String", "FLICKER_BASE_URL", "\"https://api.flickr.com/services/feeds/\""
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    implementation project(":domain")
+    def room_version = "2.4.3"
+
+    implementation "androidx.room:room-runtime:$room_version"
+    kapt "androidx.room:room-compiler:$room_version"
+
+    dataDependencies.forEach {
+        implementation(it)
+    }
+}

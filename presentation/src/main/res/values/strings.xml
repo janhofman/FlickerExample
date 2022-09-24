@@ -7,4 +7,5 @@
     <string name="download_success">Image downloaded</string>
     <string name="download_error">Could not download image</string>
     <string name="search_hint">Search by tags…</string>
+    <string name="by">by</string>
 </resources>

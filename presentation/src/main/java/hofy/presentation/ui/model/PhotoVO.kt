@@ -5,6 +5,7 @@ import hofy.domain.model.PhotoMediaDO
 import hofy.domain.model.TagDO
 
 data class PhotoVO(
+    val title: String,
     val tags: List<TagVO>,
     val url: String,
     val author: String,
@@ -19,9 +20,20 @@ data class PhotoVO(
     companion object {
         fun fromDO(source: PhotoDO): PhotoVO {
             return PhotoVO(
+                source.title.orEmpty(),
                 source.tags?.map { TagVO.fromDO(it) } ?: listOf(),
                 source.media?.m.orEmpty(),
-                source.author.orEmpty(),
+                if (source.author?.startsWith("nobody@flickr.com") == true) {
+                    source.author?.replace(".*\\(\"(.*)\"\\).*".toRegex()) {
+                        if (it.groups.size > 1) {
+                            it.groups[1]?.value.orEmpty()
+                        } else {
+                            ""
+                        }
+                    }.orEmpty()
+                } else {
+                    source.author.orEmpty()
+                },
                 source.link,
                 source.published.orEmpty()
             )

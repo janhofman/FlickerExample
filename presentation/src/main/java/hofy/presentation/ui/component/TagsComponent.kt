@@ -3,6 +3,7 @@ package hofy.presentation.ui.component
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -17,7 +18,7 @@ import hofy.presentation.ui.model.TagVO
 
 @Composable
 fun TagsComponent(tags: List<TagVO>, onTagClick: (TagVO) -> Unit) {
-    LazyRow(Modifier.padding(bottom = 8.dp)) {
+    LazyRow(Modifier.padding(bottom = 8.dp), contentPadding = PaddingValues(horizontal = 8.dp)) {
         items(tags) {
             TagComponent(it, onTagClick)
         }

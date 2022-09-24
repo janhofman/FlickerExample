@@ -14,6 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.ExperimentalUnitApi
@@ -52,17 +54,32 @@ fun PhotoGrid(
             items.forEach {
                 item {
                     Text(
-                        it.author,
-                        modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp),
-                        fontWeight = FontWeight.Light,
-                        color = Color.Gray,
-                        fontSize = TextUnit(12f, TextUnitType.Sp)
+                        it.title,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = TextUnit(12f, TextUnitType.Sp),
+                        lineHeight = TextUnit(12f, TextUnitType.Sp),
+                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp)
                     )
+                    Row(Modifier.padding(horizontal = 16.dp)) {
+                        Text(
+                            stringResource(R.string.by),
+                            modifier = Modifier.padding(end = 4.dp),
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Gray,
+                            fontSize = TextUnit(10f, TextUnitType.Sp)
+                        )
+                        Text(
+                            it.author,
+                            fontWeight = FontWeight.Light,
+                            color = Color.Gray,
+                            fontSize = TextUnit(10f, TextUnitType.Sp)
+                        )
+                    }
                     AppImage(
                         it.url,
                         modifier = Modifier.fillMaxWidth().aspectRatio(1f).clickable {
                             onImageClick.invoke(it)
-                        },
+                        }.padding(top = 8.dp),
                         contentScale = ContentScale.Crop
                     )
                     Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
@@ -73,6 +90,7 @@ fun PhotoGrid(
                             textAlign = TextAlign.End,
                             fontWeight = FontWeight.Light,
                             color = Color.Gray,
+                            fontStyle = FontStyle.Italic,
                             fontSize = TextUnit(10f, TextUnitType.Sp)
                         )
                         Row(Modifier.fillMaxWidth().padding(bottom = 8.dp)) {

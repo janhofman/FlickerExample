@@ -6,7 +6,7 @@ import hofy.domain.model.TagDO
 
 data class PhotoVO(
     val title: String,
-    val tags: List<TagVO>,
+    val tags: List<TagItem.TagVO>,
     val url: String,
     val author: String,
     val link: String?,
@@ -21,7 +21,7 @@ data class PhotoVO(
         fun fromDO(source: PhotoDO): PhotoVO {
             return PhotoVO(
                 source.title.orEmpty(),
-                source.tags?.map { TagVO.fromDO(it) } ?: listOf(),
+                source.tags?.map { TagItem.TagVO.fromDO(it) } ?: listOf(),
                 source.media?.m.orEmpty(),
                 if (source.author?.startsWith("nobody@flickr.com") == true) {
                     source.author?.replace(".*\\(\"(.*)\"\\).*".toRegex()) {
@@ -41,16 +41,22 @@ data class PhotoVO(
     }
 }
 
-data class TagVO(val name: String, val color: Long, var selected: Boolean = false) {
-    fun toDO(): TagDO {
-        return TagDO(name = name, color = color)
-    }
+sealed class TagItem {
+    data class TagVO(val name: String, val color: Long, var selected: Boolean = false) : TagItem() {
+        fun toDO(): TagDO {
+            return TagDO(name = name, color = color)
+        }
 
-    companion object {
-        fun fromDO(source: TagDO): TagVO {
-            return TagVO(source.name, source.color)
+        companion object {
+            fun fromDO(source: TagDO): TagVO {
+                return TagVO(source.name, source.color)
+            }
         }
     }
+
+    object Cancel : TagItem()
 }
+
+
 
 

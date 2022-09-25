@@ -1,61 +1,78 @@
 package hofy.presentation.ui.main
 
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.google.accompanist.swiperefresh.SwipeRefresh
-import com.google.accompanist.swiperefresh.SwipeRefreshIndicator
-import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import hofy.presentation.ui.MainState
-import hofy.presentation.ui.component.TagsComponent
-import hofy.presentation.ui.component.screen.EmptyScreen
-import hofy.presentation.ui.component.screen.ErrorScreen
-import hofy.presentation.ui.component.screen.LoadingScreen
+import hofy.presentation.ui.component.BottomInfoComponent
+import hofy.presentation.ui.component.screen.DashboardScreen
+import hofy.presentation.ui.component.screen.FavouritesScreen
+import hofy.presentation.ui.component.screen.PhotoDetailScreen
 import hofy.presentation.ui.model.PhotoVO
-import hofy.presentation.ui.model.TagVO
+import hofy.presentation.ui.model.TagItem
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 
 @Composable
 fun MainScreen(
+    navController: NavHostController,
     state: MainState,
     onImageClick: (PhotoVO) -> Unit,
     onShareClick: (PhotoVO) -> Unit,
     onDownloadClick: (PhotoVO) -> Unit,
     onRefreshRequested: () -> Unit,
-    onTagClick: (TagVO) -> Unit,
+    onTagClick: (TagItem.TagVO) -> Unit,
     onFavouriteClick: (PhotoVO) -> Unit,
+    onCancelClick: () -> Unit
 ) {
-    SwipeRefresh(
-        rememberSwipeRefreshState(state.loading),
-        onRefresh = { onRefreshRequested.invoke() }, indicator = { swipeState, trigger ->
-            if (swipeState.isSwipeInProgress) {
-                SwipeRefreshIndicator(swipeState, trigger)
-            }
-        }) {
-        Column(Modifier.fillMaxSize()) {
-            when {
-                state.loading -> {
-                    LoadingScreen()
-                }
-                state.empty -> {
-                    TagsComponent(state.tags, onTagClick)
-                    EmptyScreen()
-                }
-                state.error != null -> {
-                    ErrorScreen()
-                }
-                state.photos != null -> {
-                    TagsComponent(state.tags, onTagClick)
-                    PhotoGrid(
-                        items = state.photos,
+    var padding by remember {
+        mutableStateOf(56.dp)
+    }
+    Box(
+        Modifier.fillMaxSize().padding(bottom = padding),
+        contentAlignment = Alignment.BottomCenter
+    ) {
+        Box(Modifier.fillMaxSize()) {
+            NavHost(
+                navController = navController,
+                startDestination = NavigationItem.Main.path
+            ) {
+                composable(NavigationItem.Main.path) {
+                    padding = 56.dp
+                    DashboardScreen(
+                        state,
                         onImageClick,
-                        state.grid,
                         onShareClick,
                         onDownloadClick,
-                        onFavouriteClick
+                        onRefreshRequested,
+                        onTagClick,
+                        onFavouriteClick,
+                        onCancelClick
                     )
+                }
+                composable(NavigationItem.Detail.path) { navBackStackEntry ->
+                    padding = 0.dp
+                    PhotoDetailScreen(
+                        URLDecoder.decode(
+                            navBackStackEntry.arguments?.getString(
+                                ARG_PHOTO_URL
+                            ).orEmpty(), StandardCharsets.UTF_8.toString()
+                        )
+                    )
+                }
+                composable(NavigationItem.Favourites.path) {
+                    padding = 56.dp
+                    FavouritesScreen()
                 }
             }
         }
+        BottomInfoComponent(state)
     }
 }

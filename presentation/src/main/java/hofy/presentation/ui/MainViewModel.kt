@@ -10,7 +10,7 @@ import hofy.domain.usecase.GetPhotosUseCase
 import hofy.domain.usecase.GetTagsUseCase
 import hofy.presentation.ui.ext.set
 import hofy.presentation.ui.model.PhotoVO
-import hofy.presentation.ui.model.TagVO
+import hofy.presentation.ui.model.TagItem
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -21,7 +21,7 @@ data class MainState(
     val empty: Boolean = false,
     val error: Throwable? = null,
     val photos: List<PhotoVO>? = null,
-    val tags: List<TagVO> = listOf(),
+    val tags: List<TagItem> = listOf(),
     val imageDownloadingState: ImageDownloadingState? = null,
     val currentDetailedPhoto: PhotoVO? = null,
     val query: String? = null
@@ -51,9 +51,10 @@ class MainViewModel(
         viewModelScope.launch {
             getTagsUseCase().collect {
                 _state.set {
-                    val newList = it.map { TagVO.fromDO(it) }.toMutableList()
-                    newList.removeAll(tags)
-                    _state.value.copy(tags = tags.toMutableList().apply { addAll(newList) })
+                    val newList = it.map { TagItem.TagVO.fromDO(it) }.toMutableList()
+                    newList.removeAll(tags.toSet())
+                    val newTags = tags.toMutableList().apply { addAll(newList) }
+                    _state.value.copy(tags = addCancelTagsIfNeeded(newTags))
                 }
             }
         }
@@ -94,7 +95,7 @@ class MainViewModel(
         loadImages()
     }
 
-    private suspend fun executePhotosUseCase(query: String? = null, tags: List<TagVO>?) {
+    private suspend fun executePhotosUseCase(query: String? = null, tags: List<TagItem.TagVO>?) {
         getPhotosUseCase(query, tags?.map { it.toDO() }).collect {
             _state.set {
                 when (it) {
@@ -128,7 +129,7 @@ class MainViewModel(
     }
 
     private var searchJob: Job? = null
-    fun loadImages(query: String? = null, tags: List<TagVO>? = null) {
+    fun loadImages(query: String? = null, tags: List<TagItem.TagVO>? = null) {
         if (query != null) {
             _state.set {
                 _state.value.copy(query = query)
@@ -138,28 +139,41 @@ class MainViewModel(
         searchJob = viewModelScope.launch {
             if (query != null) {
                 delay(700)
-                executePhotosUseCase(query, tags = tags ?: _state.value.tags.filter { it.selected })
+                executePhotosUseCase(
+                    query,
+                    tags = tags ?: _state.value.tags.filterIsInstance<TagItem.TagVO>()
+                        .filter { it.selected })
             } else {
                 executePhotosUseCase(
                     _state.value.query,
-                    tags = tags ?: _state.value.tags.filter { it.selected })
+                    tags = tags ?: _state.value.tags.filterIsInstance<TagItem.TagVO>()
+                        .filter { it.selected })
             }
-
         }
     }
 
-    fun triggerTagClicked(tagVO: TagVO) {
+    private fun addCancelTagsIfNeeded(newTags: MutableList<TagItem>): List<TagItem> {
+        if (newTags.find { it is TagItem.TagVO && it.selected } != null
+            && newTags.find { it is TagItem.Cancel } == null) {
+            newTags.add(0, TagItem.Cancel)
+        }
+        return newTags
+    }
+
+    fun triggerTagClicked(tagVO: TagItem.TagVO) {
         _state.set {
-            _state.value.copy(tags = tags.toMutableList().apply {
+
+            val newTags = tags.toMutableList().apply {
                 val index = indexOf(tagVO)
                 if (index == -1) {
                     add(index, tagVO.copy(selected = !tagVO.selected))
                 } else {
                     set(index, tagVO.copy(selected = !tagVO.selected))
                 }
-            })
+            }
+            _state.value.copy(tags = addCancelTagsIfNeeded(newTags))
         }
-        loadImages(tags = _state.value.tags.filter { it.selected })
+        loadImages()
     }
 
     fun triggerFavouriteClicked(photo: PhotoVO) {
@@ -173,6 +187,18 @@ class MainViewModel(
                 }
             })
         }
+    }
+
+    fun triggerCancelTags() {
+        _state.set {
+            val newTags: MutableList<TagItem> =
+                tags.toMutableList().filterIsInstance<TagItem.TagVO>()
+                    .map { it.copy(selected = false) }.toMutableList()
+            _state.value.copy(
+                tags = addCancelTagsIfNeeded(newTags)
+            )
+        }
+        loadImages()
     }
 
 }
